@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { prismaClient } from "./db";
 
-const app = express();
+export const app = express();
 const port = 3000;
 
 app.use(express.json());
@@ -45,9 +45,4 @@ app.use("/healthz", (req: Request, res: Response): any => {
   if (req.method !== "GET") {
     return res.status(405).end();
   }
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
 });
