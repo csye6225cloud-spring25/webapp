@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Define variables
 DB_NAME="webapp"
-DB_USER="onerahul"
-DB_PASSWORD="password"
-DB_HOST="localhost"
 LINUX_GROUP="webappgroup"
 LINUX_USER="onerahul"
 APP_DIR="/opt/csye6225"
