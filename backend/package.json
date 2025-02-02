@@ -4,23 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsc -b && node dist/index.js"
+    "test": "vitest",
+    "test:integration": "./scripts/run-integration.sh",
+    "dev": "tsc -b && node dist/bin.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "^6.3.0",
     "@types/express": "^5.0.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "prisma": "^6.2.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"
   },
   "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.34.0",
     "@types/supertest": "^6.0.2",
+    "prisma": "^6.3.0",
     "supertest": "^7.0.0"
   }
 }
