@@ -65,3 +65,4 @@ else
 fi
 
 echo "Setup complete. The application is ready to use."
+
