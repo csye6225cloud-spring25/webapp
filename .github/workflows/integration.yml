@@ -1,0 +1,45 @@
+name: Integration Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    env:
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Setup PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql postgresql-contrib
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
+          sudo -u postgres psql -c "ALTER USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+
+      - name: Apply Prisma Migrations
+        run: npx prisma migrate dev --name init
+
+      - name: Run Integration Tests
+        run: npm test:integration
