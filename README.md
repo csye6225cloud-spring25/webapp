@@ -161,3 +161,41 @@ npm run test:integration
 ```
 
 This will invoke the run-integration.sh script and start the process.
+
+# Assignment 3 - Continuous Integration (CI) for Web App
+
+## Objective
+
+In this task, we set up **Continuous Integration (CI)** using **GitHub Actions** to run application tests for every pull request raised. The goal is to ensure that:
+
+1. A pull request can only be merged if the tests pass.
+2. The CI pipeline executes successfully for each pull request.
+3. **GitHub branch protection** ensures users cannot merge pull requests that fail the CI workflow.
+
+---
+
+## CI Workflow
+
+### **GitHub Actions Workflow**
+
+- The CI pipeline is triggered on **pull requests** made to the `main` branch.
+- The workflow performs the following steps:
+  1. **Setup PostgreSQL Database**: Installs and configures PostgreSQL for testing.
+  2. **Install Dependencies**: Installs the necessary Node.js dependencies.
+  3. **Run Prisma Migrations**: Applies any pending database migrations using Prisma.
+  4. **Run Tests**: Executes the integration tests that were implemented in the previous assignment.
+
+### **GitHub Status Checks**
+
+- The pull request will only be able to merge **if the CI workflow passes**. This prevents untested code from being merged into the `main` branch.
+
+---
+
+## Steps to Run CI Workflow
+
+1. **Make Changes**: Make changes to your code and push them to a new branch.
+2. **Raise a Pull Request**: Create a pull request from your feature branch to `main`.
+3. **CI Workflow Runs**: GitHub Actions will trigger the workflow to run your tests.
+4. **Merge PR**: If the tests pass, you can merge the pull request.
+
+---
