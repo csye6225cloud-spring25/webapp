@@ -31,6 +31,11 @@ jobs:
         working-directory: backend
         run: npm install
 
+      - name: Make Scripts Executable
+        run: |
+          chmod +x backend/scripts/run-integration.sh
+          chmod +x backend/scripts/wait-for-it.sh
+
       - name: Setup PostgreSQL
         run: |
           sudo apt-get update
@@ -40,9 +45,9 @@ jobs:
           sudo -u postgres psql -c "ALTER USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
 
       - name: Apply Prisma Migrations
-        working-directory: backend # Runs in backend folder
+        working-directory: backend
         run: npx prisma migrate dev --name init
 
       - name: Run Integration Tests
-        working-directory: backend # Runs in backend folder
+        working-directory: backend
         run: npm run test:integration
