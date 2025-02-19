@@ -10,6 +10,10 @@ app.use(express.json());
 app.get("/healthz", async (req: Request, res: Response): Promise<any> => {
   console.log("Health check endpoint hit");
 
+  if (Object.keys(req.query).length > 0) {
+    return res.status(400).end();
+  }
+
   // Reject request with payload (400 Bad Request)
   if (Object.keys(req.body).length > 0) {
     return res.status(400).end();
