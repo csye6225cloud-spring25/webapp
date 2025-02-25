@@ -6,7 +6,10 @@
   "scripts": {
     "test": "vitest",
     "test:integration": "./scripts/run-integration.sh",
-    "dev": "tsc -b && node dist/bin.js"
+    "build": "tsc -b",
+    "dev": "tsc -b && node dist/bin.js",
+    "start": "node dist/bin.js"
+    
   },
   "keywords": [],
   "author": "",
@@ -17,12 +20,12 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.4"
-  },
-  "devDependencies": {
+    "vitest": "^3.0.4",
     "@rollup/rollup-linux-x64-gnu": "^4.34.0",
     "@types/supertest": "^6.0.2",
     "prisma": "^6.3.0",
     "supertest": "^7.0.0"
+  },
+  "devDependencies": {
   }
 }
