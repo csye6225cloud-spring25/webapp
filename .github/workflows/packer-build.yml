@@ -1,0 +1,77 @@
+name: Build Custom Image with Packer
+
+on:
+  push:
+    branches:
+      - main # Trigger only when PRs are merged
+
+jobs:
+  build-artifact:
+    name: Build Application Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - name: Install Dependencies & Build Application
+        working-directory: backend
+        run: |
+          # Install dependencies and build the app
+          npm install
+          npm run build
+          # Zip the whole backend folder
+          zip -r backend.zip .
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-artifact
+          path: backend/backend.zip
+
+  packer-build:
+    name: Build Custom Image with Packer (AWS & GCP)
+    runs-on: ubuntu-latest
+    needs: build-artifact
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-artifact
+          path: backend
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup GCP CLI
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: ${{secrets.GCP_SERVICE_ACCOUNT_CREDENTIALS}}
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "latest"
+
+      - name: Initialize Packer Plugins
+        run: packer init .
+
+      - name: Validate Packer Template
+        run: packer validate machine.pkr.hcl
+      - name: Build Custom Image
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: packer build machine.pkr.hcl
