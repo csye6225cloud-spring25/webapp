@@ -18,10 +18,10 @@ jobs:
           version: "latest"
 
       - name: Initialize Packer
-        run: packer init main.pkr.hcl
+        run: packer init machine.pkr.hcl
 
       - name: Check Packer Formatting
-        run: packer fmt -check main.pkr.hcl
+        run: packer fmt -check machine.pkr.hcl
 
       - name: Validate Packer Template
-        run: packer validate main.pkr.hcl
+        run: packer validate machine.pkr.hcl
