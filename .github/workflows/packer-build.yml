@@ -142,3 +142,5 @@ jobs:
           packer build \
             -var "build_timestamp=$BUILD_TIMESTAMP" \
             machine.pkr.hcl
+
+
