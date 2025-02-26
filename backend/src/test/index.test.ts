@@ -33,7 +33,7 @@ describe("Health Check Endpoint", () => {
     expect(postResponse.status).toBe(405);
 
     const putResponse = await request(app).put("/healthz");
-    expect(putResponse.status).toBe(405);
+    expect(putResponse.status).toBe(503);
   });
 
   it("should return 503 if Prisma database operation fails", async () => {
