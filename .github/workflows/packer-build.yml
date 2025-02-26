@@ -80,7 +80,7 @@ jobs:
           zip -r backend.zip .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-artifact
           path: backend/backend.zip
@@ -142,5 +142,3 @@ jobs:
           packer build \
             -var "build_timestamp=$BUILD_TIMESTAMP" \
             machine.pkr.hcl
-
-
