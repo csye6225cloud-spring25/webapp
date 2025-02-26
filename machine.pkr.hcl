@@ -1,3 +1,8 @@
+variable "build_timestamp" {
+  type    = string
+  default = "manual-build"
+}
+
 variable "DB_NAME" {
   type    = string
   default = "webapp"
@@ -59,7 +64,7 @@ packer {
 
 # AWS Source Block (Ubuntu 24.04 LTS)
 source "amazon-ebs" "ubuntu" {
-  ami_name      = var.ami_name
+  ami_name      = "${var.ami_name}-${var.build_timestamp}"
   instance_type = "t3.medium"
   region        = var.aws_region
   source_ami_filter {
@@ -87,13 +92,14 @@ source "googlecompute" "ubuntu" {
   source_image_family = "ubuntu-2404-lts"
   machine_type        = "e2-micro"
   ssh_username        = var.gcp_ssh_username
-  image_name          = "${var.gcp_image_name_prefix}-{{timestamp}}-gcp"
+  image_name          = "${var.gcp_image_name_prefix}-${var.build_timestamp}-gcp"
 }
+
 
 build {
   sources = [
     "source.amazon-ebs.ubuntu",
-    # "source.googlecompute.ubuntu"
+    "source.googlecompute.ubuntu"
   ]
 
   // Copy the application artifact (backend.zip) from the repo.
