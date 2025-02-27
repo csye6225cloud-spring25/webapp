@@ -98,8 +98,8 @@ source "googlecompute" "ubuntu" {
 
 build {
   sources = [
-    "source.amazon-ebs.ubuntu",
     "source.googlecompute.ubuntu"
+    "source.amazon-ebs.ubuntu",
   ]
 
   // Copy the application artifact (backend.zip) from the repo.
