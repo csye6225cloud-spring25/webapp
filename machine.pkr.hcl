@@ -89,7 +89,7 @@ source "amazon-ebs" "ubuntu" {
 source "googlecompute" "ubuntu" {
   project_id          = var.gcp_project_id
   zone                = var.gcp_zone
-  source_image_family = "ubuntu-2404-lts"
+  source_image_family = "ubuntu-2404-lts-amd64"
   machine_type        = "e2-micro"
   ssh_username        = var.gcp_ssh_username
   image_name          = "${var.gcp_image_name_prefix}-${var.build_timestamp}-gcp"
@@ -99,7 +99,7 @@ source "googlecompute" "ubuntu" {
 build {
   sources = [
     "source.amazon-ebs.ubuntu",
-    "source.googlecompute.ubuntu"
+    # "source.googlecompute.ubuntu"
   ]
 
   // Copy the application artifact (backend.zip) from the repo.
