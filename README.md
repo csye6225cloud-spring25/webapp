@@ -200,5 +200,63 @@ In this task, we set up **Continuous Integration (CI)** using **GitHub Actions**
 
 ---
 
-Testing Workflow
+# ASSIGNMENT 4 - Packer & Custom Images
 
+## Overview
+
+Implemented Packer to build a custom application image using Ubuntu 24.04 LTS. The image includes all dependencies, databases, and application binaries.
+
+## Requirements
+
+- Implemented Ubuntu 24.04 LTS as the base image.
+- Installed MySQL/MariaDB/PostgreSQL locally.
+- Included necessary dependencies and application binaries.
+- Ensured built images are private.
+- Configured builds in the default VPC of DEV AWS and DEV GCP.
+- Stored Packer template in the web application repository.
+
+## CI with GitHub Actions
+
+### Status Check Workflow
+
+- Implemented `packer fmt` to enforce formatting.
+- Implemented `packer validate` to ensure validation.
+- Triggered on pull requests.
+
+### Custom Image Build Workflow
+
+- Triggered only on pull request merges.
+- Implemented integration tests before the build.
+- Built the application artifact separately.
+- Copied artifact into the custom image.
+- Built custom image in AWS and GCP in parallel.
+- Created local user `csye6225` with no login shell.
+- Installed dependencies and copied required files.
+- Configured systemd for application startup.
+- Ensured failure at any step prevents image build.
+
+## IAM and Security Configuration
+
+- Created IAM service accounts for GitHub Actions in AWS and GCP.
+- Assigned necessary roles and permissions.
+- Configured AWS CLI and GCP SDK on GitHub Actions runner.
+
+## Infrastructure with Terraform
+
+### Application Security Group
+
+- Implemented a security group for EC2 instances.
+- Allowed TCP traffic on ports 22, 80, 443, and the application port.
+- Attached security group to EC2 instances.
+
+### EC2 Instance Configuration
+
+- Launched EC2 instance in Terraform-created VPC.
+- Attached application security group.
+- Configured EBS volumes to terminate on instance deletion.
+- Instance specifications:
+  - Used the custom AMI.
+  - Disabled accidental termination protection.
+  - Set root volume size to 25 GB, type GP2.
+
+Ensured automated and structured deployment of secure and efficient custom images with Terraform and Packer.
