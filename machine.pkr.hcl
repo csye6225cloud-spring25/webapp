@@ -92,7 +92,7 @@ source "googlecompute" "ubuntu" {
   source_image_family = "ubuntu-2404-lts-amd64"
   machine_type        = "e2-micro"
   ssh_username        = var.gcp_ssh_username
-  image_name          = "${var.gcp_image_name_prefix}-${var.build_timestamp}-gcp"
+  image_name          = "${var.gcp_image_name_prefix}-gcp"
 }
 
 
