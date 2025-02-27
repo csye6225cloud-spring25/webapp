@@ -120,7 +120,6 @@ build {
   }
 
 
-
   // Install Node.js using NVM.
   provisioner "shell" {
     script = "node-setup.sh"
