@@ -111,7 +111,7 @@ build {
   // Copy the systemd service file from the repo root.
   provisioner "file" {
     source      = "csye6225.service"
-    destination = "/tmp/csye6225.service"
+      destination = "/tmp/csye6225.service"
   }
 
   // Update the OS packages
