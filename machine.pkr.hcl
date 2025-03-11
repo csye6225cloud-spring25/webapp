@@ -36,7 +36,7 @@ variable "gcp_zone" {
 
 variable "ami_name" {
   type    = string
-     default = "webapp"
+  default = "webapp"
 }
 
 variable "gcp_image_name_prefix" {
