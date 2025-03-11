@@ -260,3 +260,4 @@ Implemented Packer to build a custom application image using Ubuntu 24.04 LTS. T
   - Set root volume size to 25 GB, type GP2.
 
 Ensured automated and structured deployment of secure and efficient custom images with Terraform and Packer.
+abc
