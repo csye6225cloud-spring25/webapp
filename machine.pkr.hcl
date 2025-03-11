@@ -102,10 +102,10 @@ build {
     "source.amazon-ebs.ubuntu",
   ]
 
-  // Copy the application artifact (backend.zip) from the repo.
+  // Copy the application artifact.
   provisioner "file" {
     source      = "backend/backend.zip"
-    destination = "/tmp/backend.zip"
+      destination = "/tmp/backend.zip"
   }
 
   // Copy the systemd service file from the repo root.
