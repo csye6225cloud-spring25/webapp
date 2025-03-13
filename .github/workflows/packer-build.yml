@@ -152,23 +152,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: packer-build
     steps:
-      - name: Setup AWS CLI
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Setup GCP CLI
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_CREDENTIALS }}
-
-      - name: Share AWS AMI with Demo Account
-        run: |
-          echo "Sharing AWS AMI ${{ env.AWS_AMI_ID }} with Demo Account..."
-          aws ec2 modify-image-attribute --image-id ${{ env.AWS_AMI_ID }} \
-            --launch-permission "Add=[{UserId=${{ secrets.AWS_DEMO_ACCOUNT_ID }}]}"
 
       - name: Share GCP Image with Demo Project
         run: |
