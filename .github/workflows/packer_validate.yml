@@ -25,5 +25,10 @@ jobs:
       - name: Check Packer Formatting
         run: packer fmt -check machine.pkr.hcl
 
+      - name: Create Dummy backend.zip for Validation
+        run: |
+          mkdir -p backend
+          touch backend/backend.zip
+
       - name: Validate Packer Template
         run: packer validate machine.pkr.hcl
