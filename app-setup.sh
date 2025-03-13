@@ -4,7 +4,7 @@ set -e
 echo "=== Setting up the application ==="
 
 # Create the app directory if it doesn't exist
-sudo mkdir -p /opt/app
+sudo mkdir -p /opt/app 
 
 # Unzip the application artifact
 sudo unzip -o /tmp/backend.zip -d /opt/app/backend
