@@ -84,6 +84,8 @@ source "amazon-ebs" "ubuntu" {
   }
   ssh_username = "ubuntu"
   ssh_timeout  = "30m"
+  ami_users    = ["503561450854"] # Share AMI with demo AWS account
+
 }
 
 source "googlecompute" "ubuntu" {
@@ -98,7 +100,7 @@ source "googlecompute" "ubuntu" {
 
 build {
   sources = [
-    "source.googlecompute.ubuntu",
+    # "source.googlecompute.ubuntu",
     "source.amazon-ebs.ubuntu",
   ]
 
