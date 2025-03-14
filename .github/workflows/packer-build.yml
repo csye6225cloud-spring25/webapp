@@ -136,6 +136,7 @@ jobs:
 
           # Run Packer build
           packer build \
+            -var "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
             -var "build_timestamp=$BUILD_TIMESTAMP" \
             machine.pkr.hcl
 

@@ -49,6 +49,13 @@ variable "gcp_ssh_username" {
   default = "ubuntu"
 }
 
+variable "DATABASE_URL" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+
 packer {
   required_plugins {
     amazon = {
@@ -143,6 +150,16 @@ build {
       "DB_NAME=${var.DB_NAME}",
       "DB_USER=${var.DB_USER}",
       "DB_PASSWORD=${var.DB_PASSWORD}"
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
+      # Create the .env file dynamically with the DATABASE_URL passed as a variable
+      "echo 'DATABASE_URL=${var.DATABASE_URL}' | sudo tee /opt/app/backend/.env",
+
+      # Ensure proper permissions for the .env file
+      "sudo chmod 600 /opt/app/backend/.env"
     ]
   }
 
