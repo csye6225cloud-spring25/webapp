@@ -133,31 +133,35 @@ jobs:
         run: |
           # Generate timestamp (ISO 8601 format without colons)
           BUILD_TIMESTAMP=$(date -u +"%Y%m%dT%H%M%S")
+                    
+          # Run Packer build with machine-readable output
+          packer build -machine-readable \
+          -var "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
+          -var "build_timestamp=$BUILD_TIMESTAMP" \
+          machine.pkr.hcl | tee packer.log
 
-          # Run Packer build
-          packer build \
-            -var "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
-            -var "build_timestamp=$BUILD_TIMESTAMP" \
-            machine.pkr.hcl
+          - name: Extract Image IDs
+          id: set-outputs
+          run: |
+          # Extract GCP image ID
+          GCP_IMAGE_NAME=$(grep 'googlecompute: A disk image was created:' packer.log | awk -F" " '{print $NF}')
+          echo "GCP image: $GCP_IMAGE_NAME"
+          echo "gcp_image_name=$GCP_IMAGE_NAME" >> $GITHUB_OUTPUT
 
-          # Define image names from secrets (simplified naming convention)
-          GCP_IMAGE_NAME=$(jq -r '.builds[] | select(.builder_type=="googlecompute") | .artifact_id' manifest.json)
-          echo "GCP_IMAGE_NAME=$GCP_IMAGE_NAME" >> $GITHUB_ENV
-
-  share-images:
-    name: Share AWS AMI & GCP Image with Demo Accounts/Projects
-    runs-on: ubuntu-latest
-    needs: packer-build
-    steps:
-      - name: Setup GCP CLI
-        uses: google-github-actions/auth@v2
-        with:
+          share-images:
+          name: Share GCP Image with Demo Accounts/Projects
+          runs-on: ubuntu-latest
+          needs: packer-build
+          steps:
+          - name: Setup GCP CLI
+          uses: google-github-actions/auth@v2
+          with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_CREDENTIALS }}
 
-      - name: Share GCP Image with Demo Project
-        run: |
-          echo "Sharing GCP Image ${{ env.GCP_IMAGE_NAME }} with Demo Project..."
-          gcloud compute images add-iam-policy-binding ${{ env.GCP_IMAGE_NAME }} \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
-            --member="user:${{ secrets.GCP_DEMO_ACCOUNT_EMAIL }}" \
-            --role="roles/compute.imageUser"
+          - name: Share GCP Image with Demo Project
+          run: |
+          echo "Sharing GCP Image ${{ needs.packer-build.outputs.gcp-image-name }} with Demo Project..."
+          gcloud compute images add-iam-policy-binding ${{ needs.packer-build.outputs.gcp-image-name }} \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --member="user:${{ secrets.GCP_DEMO_ACCOUNT_EMAIL }}" \
+          --role="roles/compute.imageUser"
