@@ -139,10 +139,6 @@ jobs:
             -var "build_timestamp=$BUILD_TIMESTAMP" \
             machine.pkr.hcl
 
-          # Extract AWS AMI ID using the builder_type filter to ensure we get the amazon-ebs build
-          AWS_AMI_ID=$(jq -r '.builds[] | select(.builder_type=="amazon-ebs") | .artifact_id' manifest.json | cut -d ":" -f2)
-          echo "AWS_AMI_ID=$AWS_AMI_ID" >> $GITHUB_ENV
-
           # Define image names from secrets (simplified naming convention)
           GCP_IMAGE_NAME=$(jq -r '.builds[] | select(.builder_type=="googlecompute") | .artifact_id' manifest.json)
           echo "GCP_IMAGE_NAME=$GCP_IMAGE_NAME" >> $GITHUB_ENV

@@ -16,19 +16,26 @@ sudo chown -R csye6225:csye6225 /home/csye6225
 # Change ownership of the app directory to csye6225
 sudo chown -R csye6225:csye6225 /opt/app
 
-# Install Node.js dependencies as csye6225 user
+# Clear npm cache
+echo "=== Clearing npm cache ==="
+sudo -u csye6225 bash -c "cd /opt/app/backend && npm cache clean --force"
+
+# Remove node_modules and package-lock.json
+echo "=== Removing existing node_modules and package-lock.json ==="
+sudo -u csye6225 bash -c "cd /opt/app/backend && rm -rf node_modules package-lock.json"
+
+# Install Node.js dependencies
 echo "=== Installing Node.js dependencies ==="
 sudo -u csye6225 bash -c "cd /opt/app/backend && npm install"
 
-# Generate the Prisma client to ensure all required files are present
+# Generate the Prisma client
 echo "=== Generating Prisma Client ==="
 sudo -u csye6225 bash -c "cd /opt/app/backend && npx prisma generate"
 
 # Ensure Prisma has execution permissions
 sudo chmod +x /opt/app/backend/node_modules/.bin/prisma
 
-# Run Prisma Migrations as csye6225 user
+# Run Prisma Migrations
 echo "=== Running Prisma Migrations ==="
 sudo -u csye6225 bash -c "cd /opt/app/backend && npx prisma migrate deploy"
 
-echo "=== Application setup completed successfully ==="
