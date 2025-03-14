@@ -9,6 +9,12 @@ sudo mkdir -p /opt/app
 # Unzip the application artifact
 sudo unzip -o /tmp/backend.zip -d /opt/app/backend
 
+# Create the .env file dynamically with the DATABASE_URL passed from Packer
+echo "DATABASE_URL=${DATABASE_URL}" | sudo tee /opt/app/backend/.env
+
+# Ensure proper permissions for the .env file
+sudo chmod 600 /opt/app/backend/.env
+
 # Ensure csye6225 has a home directory and it's owned by csye6225
 sudo mkdir -p /home/csye6225
 sudo chown -R csye6225:csye6225 /home/csye6225 
