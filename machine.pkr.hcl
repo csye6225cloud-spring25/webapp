@@ -154,18 +154,10 @@ build {
   }
 
   provisioner "shell" {
-    inline = [
-      # Create the .env file dynamically with the DATABASE_URL passed as a variable
-      "echo 'DATABASE_URL=${var.DATABASE_URL}' | sudo tee /opt/app/backend/.env",
-
-      # Ensure proper permissions for the .env file
-      "sudo chmod 600 /opt/app/backend/.env"
-    ]
-  }
-
-  // Extract the backend artifact and set ownership.
-  provisioner "shell" {
     script = "app-setup.sh"
+    environment_vars = [
+      "DATABASE_URL=${var.DATABASE_URL}"
+    ]
   }
 
   // Set up and enable the systemd service.
