@@ -9,8 +9,11 @@ sudo mkdir -p /opt/app
 # Unzip the application artifact
 sudo unzip -o /tmp/backend.zip -d /opt/app/backend
 
-# Create the .env file dynamically with the DATABASE_URL passed from Packer
-echo "DATABASE_URL=${DATABASE_URL}" | sudo tee /opt/app/backend/.env
+
+# This wont work now as we have to create the RDS and use that endpoint dynamically
+
+# Create the .env file dynamically with the DATABASE_URL passed from Packer 
+# echo "DATABASE_URL=${DATABASE_URL}" | sudo tee /opt/app/backend/.env
 
 # Ensure proper permissions for the .env file
 sudo chmod 600 /opt/app/backend/.env
@@ -34,14 +37,17 @@ sudo -u csye6225 bash -c "cd /opt/app/backend && rm -rf node_modules package-loc
 echo "=== Installing Node.js dependencies ==="
 sudo -u csye6225 bash -c "cd /opt/app/backend && npm install"
 
-# Generate the Prisma client
-echo "=== Generating Prisma Client ==="
-sudo -u csye6225 bash -c "cd /opt/app/backend && npx prisma generate"
 
-# Ensure Prisma has execution permissions
-sudo chmod +x /opt/app/backend/node_modules/.bin/prisma
+# Donot migrate here, migrate in terraform by sharing creds dynamically
 
-# Run Prisma Migrations
-echo "=== Running Prisma Migrations ==="
-sudo -u csye6225 bash -c "cd /opt/app/backend && npx prisma migrate deploy"
+# # Generate the Prisma client
+# echo "=== Generating Prisma Client ==="
+# sudo -u csye6225 bash -c "cd /opt/app/backend && npx prisma generate"
+
+# # Ensure Prisma has execution permissions
+# sudo chmod +x /opt/app/backend/node_modules/.bin/prisma
+
+# # Run Prisma Migrations
+# echo "=== Running Prisma Migrations ==="
+# sudo -u csye6225 bash -c "cd /opt/app/backend && npx prisma migrate deploy"
 
