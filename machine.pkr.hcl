@@ -107,7 +107,7 @@ source "googlecompute" "ubuntu" {
 
 build {
   sources = [
-    "source.googlecompute.ubuntu",
+    # "source.googlecompute.ubuntu",
     "source.amazon-ebs.ubuntu",
   ]
 
@@ -144,20 +144,20 @@ build {
   }
 
   // Set up PostgreSQL and configure DB; environment variables passed from Packer.
-  provisioner "shell" {
-    script = "db-setup.sh"
-    environment_vars = [
-      "DB_NAME=${var.DB_NAME}",
-      "DB_USER=${var.DB_USER}",
-      "DB_PASSWORD=${var.DB_PASSWORD}"
-    ]
-  }
+
+  # Now we donot setup the databse here, we use RDS 
+
+  # provisioner "shell" {
+  #   script = "db-setup.sh"
+  #   environment_vars = [
+  #     "DB_NAME=${var.DB_NAME}",
+  #     "DB_USER=${var.DB_USER}",
+  #     "DB_PASSWORD=${var.DB_PASSWORD}"
+  #   ]
+  # }
 
   provisioner "shell" {
     script = "app-setup.sh"
-    environment_vars = [
-      "DATABASE_URL=${var.DATABASE_URL}"
-    ]
   }
 
   // Set up and enable the systemd service.

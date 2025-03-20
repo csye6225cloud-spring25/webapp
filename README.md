@@ -260,4 +260,68 @@ Implemented Packer to build a custom application image using Ubuntu 24.04 LTS. T
   - Set root volume size to 25 GB, type GP2.
 
 Ensured automated and structured deployment of secure and efficient custom images with Terraform and Packer.
-abc
+
+
+# ASSIGNMENT 5 - Cloud-Based Web Application
+
+## Overview
+
+This is a Node.js web application deployed on AWS using EC2, RDS, and S3. The infrastructure is provisioned with Terraform, and a custom AMI is built using Packer. The app provides API endpoints for health checks and file management.
+
+## Prerequisites
+
+- An AWS account with appropriate permissions
+- Terraform installed on your machine
+- Packer installed on your machine
+- Node.js and npm installed
+- Prisma CLI installed
+
+## Setup Instructions
+
+1. **Clone the Repository**  
+   Clone the repo with git clone <repository-url> and navigate into it with cd <repository-directory>.
+
+2. **Configure AWS Credentials**  
+   Set up your AWS credentials in ~/.aws/credentials or use environment variables.
+
+3. **Build the AMI**  
+   Navigate to the packer directory with cd packer, then run packer build -var 'build_timestamp=$(date +%s)' template.pkr.hcl to create the custom AMI.
+
+4. **Deploy Infrastructure**  
+   Move to the terraform directory with cd ../terraform, initialize with terraform init, and deploy with terraform apply -var 'db_password=<your-db-password>'.
+
+5. **Access the App**  
+   Once deployed, use the public IP of the EC2 instance to access the API endpoints.
+
+## API Endpoints
+
+- **GET /healthz**  
+  Returns a 200 status if the app is healthy, or 503 if the database connection fails.
+- **POST /v1/file**  
+  Uploads a file to S3 and stores its metadata in RDS.
+- **GET /v1/file?id=<file-id>**  
+  Retrieves metadata for a specific file using its ID.
+- **DELETE /v1/file/<file-id>**  
+  Deletes a file from S3 and its metadata from RDS.
+
+## Key Components
+
+- **Packer**: Builds a custom AMI with the application pre-installed.
+- **Terraform**: Provisions the VPC, RDS, S3, and EC2 resources.
+- **Node.js**: Runs the API and connects to RDS and S3.
+- **Prisma**: Handles database schema management and migrations.
+- **Systemd**: Ensures the app starts automatically on the EC2 instance.
+
+## Security
+
+- RDS is configured as a private resource.
+- S3 uses server-side encryption for stored files.
+- EC2 runs the app as a non-privileged user.
+- Credentials are securely passed to EC2 via user data.
+
+## Troubleshooting
+
+- Check /var/log/user_data.log on the EC2 instance for startup errors.
+- Ensure the RDS instance is running and accessible.
+- Verify the EC2 instance’s IAM role has the necessary S3 permissions.
+
