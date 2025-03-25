@@ -261,7 +261,6 @@ Implemented Packer to build a custom application image using Ubuntu 24.04 LTS. T
 
 Ensured automated and structured deployment of secure and efficient custom images with Terraform and Packer.
 
-
 # ASSIGNMENT 5 - Cloud-Based Web Application
 
 ## Overview
@@ -325,3 +324,4 @@ This is a Node.js web application deployed on AWS using EC2, RDS, and S3. The in
 - Ensure the RDS instance is running and accessible.
 - Verify the EC2 instance’s IAM role has the necessary S3 permissions.
 
+Testing
