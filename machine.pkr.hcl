@@ -128,6 +128,14 @@ build {
     script = "update-system.sh"
   }
 
+  # Install CloudWatch Agent
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y amazon-cloudwatch-agent",
+      "sudo systemctl enable amazon-cloudwatch-agent"
+    ]
+  }
 
   // Install Node.js using NVM.
   provisioner "shell" {
