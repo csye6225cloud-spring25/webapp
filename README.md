@@ -324,4 +324,30 @@ This is a Node.js web application deployed on AWS using EC2, RDS, and S3. The in
 - Ensure the RDS instance is running and accessible.
 - Verify the EC2 instance’s IAM role has the necessary S3 permissions.
 
-Testing
+
+# CloudWatch Integration for Web Application
+
+## Overview
+
+This assignment upgrades a Node.js web app on AWS to use CloudWatch for logging and metrics. It runs on EC2, uses RDS for data, and S3 for files, with Terraform managing infrastructure and Packer building a custom AMI.
+
+## What It Does
+
+- Adds CloudWatch agent to the AMI via Packer for log and metric collection.
+- Updates Terraform to attach an IAM role to EC2 for CloudWatch access.
+- Configures the CloudWatch agent with a user data script to collect logs and metrics.
+- Enhances the app to log requests and errors to a file, sent to CloudWatch.
+- Tracks API calls, database queries, and S3 operations with custom metrics in CloudWatch.
+
+## Key Features
+
+- Logs all requests and errors to `/var/log/webapp.log`, visible in CloudWatch Logs.
+- Metrics include API call counts, durations, database query times, and S3 call times.
+- Infrastructure is set up with Terraform, including EC2, RDS, S3, and IAM roles.
+- No hardcoded AWS credentials; uses IAM roles for security.
+
+## How to Use
+
+- Build the AMI with Packer, deploy with Terraform, and access the app via EC2’s public IP.
+- Check logs in CloudWatch Logs and metrics in CloudWatch Metrics.
+
