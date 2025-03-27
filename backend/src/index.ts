@@ -8,10 +8,27 @@ import {
 import { prismaClient } from "./db";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import winston from "winston";
+import StatsD from "node-statsd";
 
 dotenv.config();
 
 export const app = express();
+
+// Initialize logger with Winston
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: "/var/log/webapp.log" }),
+  ],
+});
+
+// Initialize StatsD client for CloudWatch metrics
+export const statsd = new (StatsD as any)({ host: "localhost", port: 8125 });
 
 if (!process.env.AWS_REGION || !process.env.AWS_S3_BUCKET) {
   throw new Error("Missing AWS environment variables");
@@ -25,9 +42,35 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(express.json());
 
+// Middleware to log requests and measure API metrics
+app.use((req: Request, res: Response, next: Function) => {
+  const start = Date.now();
+  logger.info(`Received ${req.method} request to ${req.path}`, {
+    method: req.method,
+    path: req.path,
+  });
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    const routeName = `${req.method}_${req.path.replace(/\//g, "_")}`;
+    statsd.increment(`api.${routeName}.count`); // Count API calls
+    statsd.timing(`api.${routeName}.duration`, duration); // Time API calls
+  });
+  next();
+});
+
+// ---------------- S3 WRAPPER FUNCTION ----------------
+// Wrapper function to measure S3 call duration
+async function timedS3Call(operation: any, params: any) {
+  const start = Date.now();
+  const result = await s3.send(new operation(params));
+  const duration = Date.now() - start;
+  statsd.timing("s3.call.duration", duration); // Time S3 calls
+  return result;
+}
+
 // ---------------- HEALTH CHECK ENDPOINT ----------------
 app.get("/healthz", async (req: Request, res: Response): Promise<any> => {
-  console.log("Health check endpoint hit");
+  logger.info("Health check endpoint hit");
 
   if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
     return res.status(400).end();
@@ -42,14 +85,15 @@ app.get("/healthz", async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).end();
   } catch (error) {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-
-    return res.status(503).end();
+    // Type guard for error
+    if (error instanceof Error) {
+      logger.error("File upload failed", { error: error.stack });
+    } else {
+      logger.error("File upload failed", { error: String(error) });
+    }
+    return res.status(500).json({ error: "File upload failed" });
   }
 });
-
 app.use("/healthz", (req: Request, res: Response): any => {
   if (req.method !== "GET") {
     return res.status(405).end();
@@ -71,15 +115,13 @@ app.post(
       const bucketName = process.env.AWS_S3_BUCKET!;
       const fileKey = `uploads/${fileId}-${fileName}`;
 
-      // Upload file to S3
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: bucketName,
-          Key: fileKey,
-          Body: req.file.buffer,
-          ContentType: req.file.mimetype,
-        })
-      );
+      // Upload file to S3 with timing
+      await timedS3Call(PutObjectCommand, {
+        Bucket: bucketName,
+        Key: fileKey,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      });
 
       // Store metadata in the database
       const fileRecord = await prismaClient.file.create({
@@ -91,10 +133,15 @@ app.post(
           user_id: "some-user-id", // Replace with actual user logic if needed
         },
       });
-
+      logger.info("File uploaded successfully", { fileId });
       return res.status(201).json(fileRecord);
     } catch (error) {
-      console.error("File upload failed:", error);
+      // Type guard for error
+      if (error instanceof Error) {
+        logger.error("File upload failed", { error: error.stack });
+      } else {
+        logger.error("File upload failed", { error: String(error) });
+      }
       return res.status(500).json({ error: "File upload failed" });
     }
   }
@@ -120,7 +167,12 @@ app.get("/v1/file", async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).json(file); // Returning the entire file object
   } catch (error) {
-    console.error("Error retrieving file:", error);
+    // Type guard for error
+    if (error instanceof Error) {
+      logger.error("Error retrieving file", { error: error.stack });
+    } else {
+      logger.error("Error retrieving file", { error: String(error) });
+    }
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -145,28 +197,37 @@ app.delete(
         `${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/`
       )[1];
 
-      // Delete file from S3
-      await s3.send(
-        new DeleteObjectCommand({
-          Bucket: bucketName,
-          Key: fileKey,
-        })
-      );
+      // Delete file from S3 with timing
+      await timedS3Call(DeleteObjectCommand, {
+        Bucket: bucketName,
+        Key: fileKey,
+      });
 
       // Delete metadata from the database
       await prismaClient.file.delete({ where: { id: fileId } });
 
+      logger.info("File deleted successfully", { fileId });
       return res.status(204).end();
     } catch (error) {
-      console.error("File deletion failed:", error);
-      return res.status(500).json({ error: "File deletion failed" });
+      // Type guard for error
+      if (error instanceof Error) {
+        logger.error("File deletion failed", { error: error.stack });
+      } else {
+        logger.error("File deletion failed", { error: String(error) });
+      }
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 );
-
 // ---------------- HANDLE UNSUPPORTED METHODS ----------------
 app.all("/v1/file", (req: Request, res: Response): any => {
   if (!["POST", "GET", "DELETE"].includes(req.method)) {
     return res.status(405).end();
   }
+});
+
+// Error handling middleware
+app.use((err: Error, req: Request, res: Response, next: Function) => {
+  logger.error("Application error", { error: err.stack });
+  res.status(500).send("Something broke!");
 });
