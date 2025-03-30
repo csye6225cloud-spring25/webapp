@@ -128,11 +128,13 @@ build {
     script = "update-system.sh"
   }
 
-  # Install CloudWatch Agent
+  // Install CloudWatch Agent
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
-      "sudo apt-get install -y amazon-cloudwatch-agent",
+      "wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
+      "sudo dpkg -i amazon-cloudwatch-agent.deb",
+      "sudo apt-get install -f", # Installs any missing dependencies
       "sudo systemctl enable amazon-cloudwatch-agent"
     ]
   }
