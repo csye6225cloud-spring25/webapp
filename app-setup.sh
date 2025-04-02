@@ -9,7 +9,7 @@ sudo mkdir -p /opt/app
 sudo apt install -y unzip
 
 # Unzip the application artifact
-sudo unzip -o /tmp/backend.zip -d /opt/app/backend
+sudo unzip -o /tmp/backend.zip -d /opt/app/
 
 
 # This wont work now as we have to create the RDS and use that endpoint dynamically

@@ -1,21 +1,20 @@
 import { PrismaClient } from "@prisma/client";
-import { statsd } from "./index"; // Import statsd from a separate config file
-// Extend the Prisma client with query timing
+import { statsd } from "./metrics"; // Import StatsD from a separate file
 
-const extendedPrismaClient = new PrismaClient().$extends({
+const prisma = new PrismaClient();
+
+const extendedPrismaClient = prisma.$extends({
   query: {
-    // Apply to all models and all operations
     $allModels: {
       async $allOperations({ args, query }) {
         const start = Date.now();
-        const result = await query(args); // Use query instead of next
+        const result = await query(args); // Correct function usage
         const duration = Date.now() - start;
-        statsd.timing("db.query.duration", duration); // Send timing metric
+        statsd.timing("db.query.duration", duration); // Send metric to CloudWatch
         return result;
       },
     },
   },
 });
 
-// Export the extended client
 export const prismaClient = extendedPrismaClient;

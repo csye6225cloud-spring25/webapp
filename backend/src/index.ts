@@ -9,7 +9,7 @@ import { prismaClient } from "./db";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 import winston from "winston";
-import StatsD from "node-statsd";
+import { statsd } from "./metrics";
 
 dotenv.config();
 
@@ -26,13 +26,6 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: "/var/log/webapp.log" }),
   ],
 });
-
-// Initialize StatsD client for CloudWatch metrics
-export const statsd = new (StatsD as any)({ host: "localhost", port: 8125 });
-
-if (!process.env.AWS_REGION || !process.env.AWS_S3_BUCKET) {
-  throw new Error("Missing AWS environment variables");
-}
 
 // AWS S3 Configuration
 const s3 = new S3Client({ region: process.env.AWS_REGION });
