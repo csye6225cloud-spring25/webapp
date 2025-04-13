@@ -134,8 +134,8 @@ jobs:
           # Generate timestamp (ISO 8601 format without colons)
           BUILD_TIMESTAMP=$(date -u +"%Y%m%dT%H%M%S")
 
-          # Run Packer build
-          packer build \
+          # Run Packer build with machine-readable output
+          packer build -machine-readable \
             -var "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
             -var "build_timestamp=$BUILD_TIMESTAMP" \
             machine.pkr.hcl | tee packer-output.txt
@@ -143,7 +143,9 @@ jobs:
       - name: Extract AMI ID
         id: ami
         run: |
+          # Extract AMI ID from machine-readable output
           AMI_ID=$(grep 'artifact,0,id' packer-output.txt | cut -d',' -f6 | cut -d':' -f2)
+          echo "Extracted AMI ID: $AMI_ID"
           echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
   deploy-demo:
