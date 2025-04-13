@@ -143,10 +143,10 @@ jobs:
       - name: Extract AMI ID
         id: ami
         run: |
-          # Extract AMI ID from machine-readable output
           AMI_ID=$(grep 'artifact,0,id' packer-output.txt | cut -d',' -f6 | cut -d':' -f2)
-          echo "Extracted AMI ID: $AMI_ID"
-          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+          echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT
+          # Verify file content
+          cat $GITHUB_OUTPUT
 
   deploy-demo:
     name: Deploy to DEMO Account
@@ -166,11 +166,13 @@ jobs:
 
       - name: Update Launch Template
         run: |
+          AMI_ID="${{ needs.packer-build.outputs.ami_id }}"
+          echo "Using AMI ID: $AMI_ID"
           LATEST_VERSION=$(aws ec2 describe-launch-templates --launch-template-ids ${{ secrets.DEMO_LAUNCH_TEMPLATE_ID }} --query 'LaunchTemplates[0].LatestVersionNumber' --output text)
           aws ec2 create-launch-template-version \
             --launch-template-id ${{ secrets.DEMO_LAUNCH_TEMPLATE_ID }} \
             --source-version $LATEST_VERSION \
-            --launch-template-data "{\"ImageId\": \"${{  steps.ami.outputs.ami_id }}\"}"
+            --launch-template-data "{\"ImageId\": \"$AMI_ID\"}"
 
       - name: Trigger Instance Refresh
         run: |
