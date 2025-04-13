@@ -170,7 +170,7 @@ jobs:
           aws ec2 create-launch-template-version \
             --launch-template-id ${{ secrets.DEMO_LAUNCH_TEMPLATE_ID }} \
             --source-version $LATEST_VERSION \
-            --launch-template-data "{\"ImageId\": \"${{ needs.packer-build.outputs.ami_id }}\"}"
+            --launch-template-data "{\"ImageId\": \"${{  steps.ami.outputs.ami_id }}\"}"
 
       - name: Trigger Instance Refresh
         run: |
