@@ -93,6 +93,33 @@ app.use("/healthz", (req: Request, res: Response): any => {
   }
 });
 
+// ---------------- CI/CD HEALTH CHECK ENDPOINT ----------------
+app.get("/cicd", async (req: Request, res: Response): Promise<any> => {
+  logger.info("CI/CD endpoint hit");
+
+  if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+    return res.status(400).end();
+  }
+
+  try {
+    await prismaClient.healthCheck.create({ data: { datetime: new Date() } });
+
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    return res.status(200).end();
+  } catch (error) {
+    // Type guard for error
+    if (error instanceof Error) {
+      logger.error("CI/CD endpoint failed", { error: error.stack });
+    } else {
+      logger.error("CI/CD endpoint failed", { error: String(error) });
+    }
+    return res.status(500).json({ error: "CI/CD endpoint failed" });
+  }
+});
+
 // ---------------- FILE UPLOAD ENDPOINT ----------------
 app.post(
   "/v1/file",
