@@ -87,6 +87,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-artifact
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      ami_id: ${{ steps.ami.outputs.ami_id }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -156,6 +158,10 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Debug AMI ID
+        run: |
+          echo "AMI ID from previous job: ${{ needs.packer-build.outputs.ami_id }}"
 
       - name: Configure DEMO AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
