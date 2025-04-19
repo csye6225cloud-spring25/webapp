@@ -122,7 +122,7 @@ app.get("/cicd", async (req: Request, res: Response): Promise<any> => {
 
 // ---------------- FILE UPLOAD ENDPOINT ----------------
 app.post(
-  "/v1/file",
+  "/v2/file",
   upload.single("file"),
   async (req: Request, res: Response): Promise<any> => {
     try {
