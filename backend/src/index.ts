@@ -94,7 +94,7 @@ app.use("/healthz", (req: Request, res: Response): any => {
 });
 
 // ---------------- CI/CD HEALTH CHECK ENDPOINT ----------------
-app.get("/cicb", async (req: Request, res: Response): Promise<any> => {
+app.get("/cicd", async (req: Request, res: Response): Promise<any> => {
   logger.info("CI/CD endpoint hit");
 
   if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {

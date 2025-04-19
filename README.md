@@ -351,3 +351,187 @@ This assignment upgrades a Node.js web app on AWS to use CloudWatch for logging 
 - Build the AMI with Packer, deploy with Terraform, and access the app via EC2’s public IP.
 - Check logs in CloudWatch Logs and metrics in CloudWatch Metrics.
 
+# CSYE6225 Cloud Computing Assignment
+
+This project deploys a web application on AWS using Terraform, including an Auto Scaling Group, RDS, S3, and a load balancer with SSL certificates. The infrastructure supports both demo (`demo.onerahul.me`) and dev (`dev.onerahul.me`) environments.
+
+## Prerequisites
+
+- AWS CLI configured with `demo-profile` (for demo) and `dev-profile` (for dev).
+- Terraform installed.
+- Namecheap SSL certificate for `demo.onerahul.me`.
+- Route 53 hosted zone for `onerahul.me`.
+
+## Infrastructure Overview
+
+- **VPC**: A VPC with public and private subnets across multiple availability zones.
+- **EC2**: Auto Scaling Group (`app-asg`) with instances in private subnets, using a launch template (`app_lt`).
+- **RDS**: PostgreSQL 17 instance (`csye6225`) in private subnets, encrypted with KMS.
+- **S3**: Private bucket (`csye6225-<uuid>`) with KMS encryption and lifecycle rules.
+- **Load Balancer**: Application Load Balancer (`app-alb`) in public subnets, serving HTTPS traffic.
+- **Secrets Manager**: Stores RDS password (`db_password_3`).
+- **KMS**: Keys for EBS, S3, RDS, and Secrets Manager encryption.
+
+## SSL Certificate Configuration
+
+### Demo Environment
+
+For the demo environment (`demo.onerahul.me`), an SSL certificate is obtained from Namecheap (Sectigo/Comodo) and imported into AWS Certificate Manager (ACM). The load balancer uses this certificate to serve HTTPS traffic on port 443.
+
+#### Steps to Import Namecheap Certificate
+
+1. **Obtain Certificate from Namecheap**:
+
+   - Purchase a Sectigo/Comodo SSL certificate for `demo.onerahul.me`.
+   - Complete domain validation via DNS or email.
+   - Download the certificate bundle (e.g., `demo_onerahul_me.zip`), which includes:
+     - `demo_onerahul_me.crt` (certificate)
+     - `demo_onerahul_me.key` (private key)
+     - `demo_onerahul_me.ca-bundle` (certificate chain)
+
+2. **Import Certificate into ACM**:
+
+   - Use the AWS CLI to import the certificate:
+     ```bash
+     aws acm import-certificate \
+       --certificate fileb://demo_onerahul_me.crt \
+       --private-key fileb://demo_onerahul_me.key \
+       --certificate-chain fileb://demo_onerahul_me.ca-bundle \
+       --region us-east-1 \
+       --profile demo-profile
+     ```
+   - Note the returned `CertificateArn` (e.g., `arn:aws:acm:us-east-1:503561450854:certificate/<certificate-id>`).
+
+3. **Configure Load Balancer**:
+
+   - The Terraform configuration (`lb.tf`) references the imported certificate:
+     ```hcl
+     data "aws_acm_certificate" "demo_cert" {
+       domain   = "demo.onerahul_me"
+       statuses = ["ISSUED"]
+     }
+     resource "aws_lb_listener" "app_listener_https" {
+       load_balancer_arn = aws_lb.app_alb.arn
+       port              = 443
+       protocol          = "HTTPS"
+       ssl_policy        = "ELBSecurityPolicy-2016-08"
+       certificate_arn   = data.aws_acm_certificate.demo_cert.arn
+       default_action {
+         type             = "forward"
+         target_group_arn = aws_lb_target_group.app_tg.arn
+       }
+     }
+     ```
+   - The ALB listener serves HTTPS traffic, forwarding to EC2 instances via HTTP on the application port.
+
+4. **Security**:
+   - EC2 instances are in private subnets and only accessible via the ALB.
+   - The security group (`application_sg`) allows inbound traffic from the ALB security group (`lb_sg`) on the application port.
+   - Direct connections to EC2 instances are blocked.
+
+### Dev Environment
+
+For the dev environment (`dev.onerahul.me`), an SSL certificate is issued directly by AWS Certificate Manager (ACM) using DNS validation.
+
+#### Steps to Set Up Dev Certificate
+
+1. **Uncomment Dev Configuration**:
+
+   - In `lb.tf`, uncomment the dev certificate resources:
+     ```hcl
+     resource "aws_acm_certificate" "dev_cert" {
+       domain_name       = "dev.onerahul.me"
+       validation_method = "DNS"
+       tags = {
+         Name = "dev-cert"
+       }
+     }
+     resource "aws_route53_record" "dev_cert_validation" {
+       # ...
+     }
+     resource "aws_acm_certificate_validation" "dev_cert_validation" {
+       # ...
+     }
+     resource "aws_lb_listener" "app_listener_https" {
+       # Use dev_cert.arn
+     }
+     ```
+
+2. **Apply Terraform**:
+
+   ```bash
+   export AWS_PROFILE=dev-profile
+   terraform apply
+   ```
+
+3. **Verify**:
+   - The certificate is issued and attached to the ALB listener for `dev.onerahul.me`.
+
+### Notes
+
+- HTTP requests are not supported; only HTTPS (port 443) is served.
+- HTTP-to-HTTPS redirection is not implemented, as it’s not required.
+- ALB-to-EC2 traffic uses HTTP, as end-to-end TLS is not required.
+- Users cannot connect directly to EC2 instances due to private subnet placement and security group rules.
+
+## S3 Bucket Configuration
+
+- **Bucket**: `csye6225-<uuid>` with KMS encryption (`s3_key`).
+- **Lifecycle**: Objects transition to `STANDARD_IA` after 30 days.
+- **Access**: Public access is blocked; EC2 instances access via IAM role (`EC2AccessRole`).
+
+## Troubleshooting ASG Issues
+
+If the ASG (`app-asg`) fails with "timeout while waiting for state to become 'ok'":
+
+- Check CloudWatch logs (`webapp-logs`) for `/var/log/user_data.log` errors.
+- Verify Secrets Manager secret `db_password_3` is accessible.
+- Ensure security groups allow load balancer traffic to instances on the application port.
+
+## Troubleshooting KMS Issues
+
+If instances fail to launch with KMS errors:
+
+- Confirm `alias/ebs-key` is enabled in the KMS console.
+- Verify the KMS policy includes `EC2AccessRole` and `autoscaling.amazonaws.com` with actions like `kms:CreateGrant`, `kms:Decrypt`.
+- Check CloudTrail for `AccessDenied` errors on KMS actions.
+- Test a standalone instance with the launch template to isolate issues:
+  ```bash
+  aws ec2 run-instances \
+    --launch-template LaunchTemplateName=app-lt \
+    --subnet-id <private-subnet-id> \
+    --security-group-ids <application-sg-id> \
+    --region us-east-1 \
+    --profile demo-profile
+  ```
+
+## Deployment Instructions
+
+### Demo Environment
+
+1. Configure AWS CLI with `demo-profile`.
+2. Import the Namecheap certificate (see above).
+3. Run Terraform:
+   ```bash
+   export AWS_PROFILE=demo-profile
+   terraform init
+   terraform apply
+   ```
+4. Verify:
+   - Access `https://demo.onerahul.me`.
+   - Check ASG instances are healthy in EC2 console.
+   - Confirm S3 bucket and RDS are operational.
+
+### Dev Environment
+
+1. Configure AWS CLI with `dev-profile`.
+2. Uncomment dev certificate resources in `lb.tf`.
+3. Run Terraform:
+   ```bash
+   export AWS_PROFILE=dev-profile
+   terraform init
+   terraform apply
+   ```
+4. Verify:
+   - Access `https://dev.onerahul.me`.
+
