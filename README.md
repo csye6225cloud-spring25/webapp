@@ -324,6 +324,7 @@ This is a Node.js web application deployed on AWS using EC2, RDS, and S3. The in
 - Ensure the RDS instance is running and accessible.
 - Verify the EC2 instance’s IAM role has the necessary S3 permissions.
 
+
 # CloudWatch Integration for Web Application
 
 ## Overview
@@ -533,3 +534,4 @@ If instances fail to launch with KMS errors:
    ```
 4. Verify:
    - Access `https://dev.onerahul.me`.
+
